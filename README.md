@@ -1,19 +1,14 @@
-Bit-Detection
-=============
+Manchester-Decode
+=================
 
-Here I attempt to detect bits from manchester waves and stuff
+This C program decodes a file containing signed integer samples of an AC Signal which use Amplitude Modulation to send Manchester (IEEE) encoded bits. To run this program:<br>
 
-To compile type
+1. Nevigate to the folder containing the project documents.
+2. Then run the Makefile,<br>
+    $ make
+3. This creates the executable "man_decode", which is run with,<br>
+    $ ./man_decode "file"
+   
+   Where "file" is the path and name of the file that contains the samples to be decoded.
 
-make
-
-which should make a file called bit_detect
-
-Usage:
-
-bit_detect file1 file2 ... filen
-
-e.g.
-
-bit_detect HeadsetSensor_in_25Hz_5kHzOne_0xDE_44kSR_SE_i5s.txt
-
+There are example txt files containing samples.
