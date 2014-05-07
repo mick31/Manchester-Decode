@@ -37,14 +37,15 @@ int main(int argc, char **argv) {
     int curWindowState = LOW_STATE;
     int lastWindowState = UNKNOWN_STATE;
     int secondLastWindowState = UNKNOWN_STATE;
-    int decoded_data[MAX_BUF];
+    int decodedData[MAX_BUF];
     int bit_num = 0;
+    int checkSum = 0;
 
     int i, j, sample, num_samples;
     int samples[MAX_BUF];
     for (i = 0; i < MAX_BUF; ++i) {
         samples[i] = 0;
-        decoded_data[i] = -1;
+        decodedData[i] = UNKNOWN_STATE;
     }
     
     char *filename = argv[1];
@@ -123,6 +124,7 @@ int main(int argc, char **argv) {
         if (startEdge) {
             // Grab edge
             if (curState != lastState) {
+                lastState = curState;
                 lastSampleEdge = i;
             }
 
@@ -137,7 +139,7 @@ int main(int argc, char **argv) {
                 }
 
                 #ifdef DEBUG
-                    printf("Half Period Start- curState: %d oubleState: %d curWindowState:%d lastWindowState:%d secondLastWindowState:%d\n", curState, doubleState, curWindowState, lastWindowState, secondLastWindowState);
+                    printf("Half Period Start- curState: %d doubleState: %d curWindowState:%d lastWindowState:%d secondLastWindowState:%d\n", curState, doubleState, curWindowState, lastWindowState, secondLastWindowState);
                 #endif
 
                 if (curWindowState != curState){
@@ -181,7 +183,7 @@ int main(int argc, char **argv) {
                         printf("            ***** %d detected between samples %d to %d\n", curWindowState, i, i+j);
                     #endif                    
 
-                    decoded_data[bit_num] = curWindowState;
+                    decodedData[bit_num] = curWindowState;
                     bit_num++;
                 }
                 // Check for non bit flip
@@ -206,28 +208,44 @@ int main(int argc, char **argv) {
                     // Convert resulting "bits" to bytes. data is Little Endian
                     printf("\nDecoded Bytes:\n");
                     int byte_val = 0;
-                    int power = 0;
-                    for (int byte_itor = 0; byte_itor < bit_num; byte_itor++) {
-                        byte_val += (int)pow(2,power) * decoded_data[byte_itor];
-                        power++;
-                        if (power < 8) {
-                            printf("0x%x\n",byte_val);
-                            power = 0;
-                            byte_val = 0;
-                        }
-                        if (byte_itor%32 == 0) printf("\n");
+                    int power = 7;
+                    int check_it = 0;
 
-                    /*for (int byte_itor = bit_num-1; byte_itor >= 0; byte_itor--) {
-                        byte_val += (int)pow(2,power) * decoded_data[byte_itor];
+                    for (int byte_itor = bit_num-1; byte_itor >= 0; byte_itor--) {
+                        byte_val += (int)pow(2,power) * decodedData[byte_itor];
+                        if (check_it)
+                            checkSum += decodedData[byte_itor];
                         power--;
                         if (power < 0) {
+                            if (byte_itor == bit_num - 8) {
+                                printf("Recieved Check Sum: ");
+                                check_it = 1;
+                            }
                             printf("0x%x\n",byte_val);
                             power = 7;
                             byte_val = 0;
                         }
-                        if (byte_itor%32 == 0) printf("\n");
-                    }*/
                     }
+
+                    printf("Actual Check Sum: 0x%x\n\n", checkSum);
+
+                    #ifdef DEBUG_READ
+                        printf("    Little Endian Binary Input:\n");
+                        for(int bit_itor = 0; bit_itor < bit_num; bit_itor++) {
+                            printf("%d", decodedData[bit_itor]);
+                            if (bit_itor%8 == 7) printf(" ");
+                        }
+                        printf("\n");
+                    #endif
+                    
+                    // Clear input array
+                    for (int clear = 0; clear < bit_num; clear++)
+                        decodedData[clear] = UNKNOWN_STATE;
+
+                    // Reset bit_num and checkSum
+                    bit_num = 0;
+                    checkSum = 0;
+                    check_it = 0;
                 }
 
                 // Push state down the line
@@ -242,17 +260,6 @@ int main(int argc, char **argv) {
             }
         }
     }
-
-
-    #ifdef DEBUG_READ
-        printf("    Little Endian Binary Input:\n");
-        for(int bit_itor = 0; bit_itor < bit_num; bit_itor++) {
-            if (bit_itor%32 == 0) printf("\n");
-            printf("%d", decoded_data[bit_itor]);
-            if (bit_itor%8 == 7) printf(" ");
-        }
-        printf("\n");
-    #endif
 
     return 0;
 }
