@@ -11,4 +11,4 @@ This C program decodes a file containing signed integer samples of an AC Signal 
    
    Where "file" is the path and name of the file that contains the samples to be decoded.
 
-There are example txt files containing samples.
+There are examples of of inupt files, containing real samples, in the folder Test_Files.
