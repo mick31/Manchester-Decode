@@ -19,27 +19,27 @@
 #define LOW_STATE               0
 #define HIGH_STATE              1
 #define UNKNOWN_STATE           -1
-#define HALF_PERIOD_TC          216     // Tested working for one byte/msg
-#define NUM_SAMPLES_PER_PERIOD  8       // Tested working for one byte/msg 
+#define HALF_PERIOD_TC          216     // Tested working for multi bytes/packet
+#define NUM_SAMPLES_PER_PERIOD  8       // Tested working for multi bytes/packet
 #define SAMPLES_PER_CHECK       HALF_PERIOD_TC / NUM_SAMPLES_PER_PERIOD
 
 typedef enum { false, true } bool;
 
 int main(int argc, char **argv) {
     // Algorithm Variables
-    int halfPeriodCount = 0;
-    bool firstHalfPeriod = false;
-    bool startEdge = false;
-    int doubleState = LOW_STATE;
-    int curState = LOW_STATE;
-    int lastState = UNKNOWN_STATE;
-    int lastSampleEdge = 0;
-    int curWindowState = LOW_STATE;
-    int lastWindowState = UNKNOWN_STATE;
-    int secondLastWindowState = UNKNOWN_STATE;
-    int decodedData[MAX_BUF];
-    int bit_num = 0;
-    int checkSum = 0;
+    int halfPeriodCount = 0;                    //
+    bool firstHalfPeriod = false;               //
+    bool startEdge = false;                     //
+    int doubleState = LOW_STATE;                //
+    int curState = LOW_STATE;                   //
+    int lastState = UNKNOWN_STATE;              //
+    int lastSampleEdge = 0;                     //
+    int curWindowState = LOW_STATE;             //
+    int lastWindowState = UNKNOWN_STATE;        //
+    int secondLastWindowState = UNKNOWN_STATE;  //
+    int decodedData[MAX_BUF];                   //
+    int bit_num = 0;                            //
+    int checkSum = 0;                           //
 
     int i, j, sample, num_samples;
     int samples[MAX_BUF];
@@ -80,17 +80,13 @@ int main(int argc, char **argv) {
     int halfPeriodSum = 0;
     // Traverse through all samples applying Manchester Decode
     for (i = 0; i < num_samples; i += SAMPLES_PER_CHECK) {
-        int avgSamplePrev = 0;
         int avgSampleNext = 0;
-        int prevSamples = 0;
         int nextSamples = 0;
 
         // Find average value for the prev and next set of point around the expected edge
         for (j = 0; j < SAMPLES_PER_CHECK && i+j < num_samples; j++) {
-            prevSamples += samples[i-j];
             nextSamples += samples[i+j];
         }
-        avgSamplePrev = prevSamples / SAMPLES_PER_CHECK;
         avgSampleNext = nextSamples / j;
 
         // Associate current bit value based on min/max values and check if it's the start bit
